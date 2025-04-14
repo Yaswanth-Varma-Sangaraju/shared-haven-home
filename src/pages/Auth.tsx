@@ -14,16 +14,16 @@ import Header from "@/components/Header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
-// Simplified schemas without constraints
+// Schemas with minimal validation - just ensuring non-empty values
 const loginSchema = z.object({
-  email: z.string(),
-  password: z.string()
+  email: z.string().min(1, "Email is required"),
+  password: z.string().min(1, "Password is required")
 });
 
 const signupSchema = z.object({
-  email: z.string(),
-  password: z.string(),
-  confirmPassword: z.string()
+  email: z.string().min(1, "Email is required"),
+  password: z.string().min(1, "Password is required"),
+  confirmPassword: z.string().min(1, "Password confirmation is required")
 });
 
 const Auth: React.FC = () => {
@@ -67,6 +67,8 @@ const Auth: React.FC = () => {
     setAuthError(null);
     
     try {
+      console.log("Logging in with:", { email: values.email, password: values.password });
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password
@@ -93,6 +95,8 @@ const Auth: React.FC = () => {
     setAuthError(null);
     
     try {
+      console.log("Signing up with:", { email: values.email, password: values.password });
+      
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password
@@ -151,7 +155,7 @@ const Auth: React.FC = () => {
                         <FormControl>
                           <Input 
                             placeholder="you@example.com" 
-                            type="text"
+                            type="email"
                             autoComplete="email"
                             {...field} 
                           />
@@ -199,7 +203,7 @@ const Auth: React.FC = () => {
                         <FormControl>
                           <Input 
                             placeholder="you@example.com" 
-                            type="text"
+                            type="email"
                             autoComplete="email"
                             {...field} 
                           />
