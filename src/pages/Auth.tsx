@@ -11,15 +11,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Header from "@/components/Header";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
-// Use a simpler email validation that better handles Gmail addresses
+// Simple email validation to accommodate various email formats including Gmail
+const emailSchema = z.string().email({ message: "Please enter a valid email address" });
+
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string().min(6, "Password must be at least 6 characters")
 });
 
 const signupSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
@@ -30,6 +34,7 @@ const signupSchema = z.object({
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,6 +69,8 @@ const Auth: React.FC = () => {
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
+    setAuthError(null);
+    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
@@ -79,12 +86,14 @@ const Auth: React.FC = () => {
 
       navigate("/dashboard");
     } catch (error: any) {
-      toast({
-        title: "Login Error",
-        description: error.message || "An error occurred during login",
-        variant: "destructive"
-      });
       console.error("Login error:", error);
+      
+      // More user-friendly error messages
+      if (error.message.includes("Invalid login")) {
+        setAuthError("Incorrect email or password. Please try again.");
+      } else {
+        setAuthError(error.message || "An error occurred during login");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +101,8 @@ const Auth: React.FC = () => {
 
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
     setIsLoading(true);
+    setAuthError(null);
+    
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -102,11 +113,7 @@ const Auth: React.FC = () => {
 
       // Check if user needs to confirm their email
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        toast({
-          title: "Email already registered",
-          description: "Please login or reset your password",
-          variant: "destructive"
-        });
+        setAuthError("Email already registered. Please login or reset your password.");
         return;
       }
 
@@ -120,12 +127,8 @@ const Auth: React.FC = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
-      toast({
-        title: "Signup Error",
-        description: error.message || "An error occurred during signup",
-        variant: "destructive"
-      });
       console.error("Signup error:", error);
+      setAuthError(error.message || "An error occurred during signup");
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +148,13 @@ const Auth: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {authError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTitle>Authentication Error</AlertTitle>
+                <AlertDescription>{authError}</AlertDescription>
+              </Alert>
+            )}
+            
             {isLogin ? (
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
@@ -155,7 +165,12 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="you@example.com" type="email" {...field} />
+                          <Input 
+                            placeholder="you@example.com" 
+                            type="email"
+                            autoComplete="email"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -168,7 +183,12 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="******" {...field} />
+                          <Input 
+                            type="password" 
+                            placeholder="******" 
+                            autoComplete="current-password"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -193,7 +213,12 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="you@example.com" type="email" {...field} />
+                          <Input 
+                            placeholder="you@example.com" 
+                            type="email"
+                            autoComplete="email"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -206,7 +231,12 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="******" {...field} />
+                          <Input 
+                            type="password" 
+                            placeholder="******" 
+                            autoComplete="new-password"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -219,7 +249,12 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="******" {...field} />
+                          <Input 
+                            type="password" 
+                            placeholder="******" 
+                            autoComplete="new-password"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -238,7 +273,10 @@ const Auth: React.FC = () => {
             <div className="text-center mt-4">
               <Button 
                 variant="link" 
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setAuthError(null); // Clear errors when switching forms
+                }}
                 disabled={isLoading}
               >
                 {isLogin 
