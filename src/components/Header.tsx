@@ -12,17 +12,15 @@ const Header = ({ showHomeLink = true }: { showHomeLink?: boolean }) => {
             SharedHaven
           </h1>
         </div>
-        <div className="flex items-center space-x-4">
-          {showHomeLink && (
-            <Link
-              to="/"
-              className="flex items-center space-x-1 text-roomie-navy hover:text-roomie-teal transition-colors"
-            >
-              <Home className="h-5 w-5" />
-              <span>Home</span>
-            </Link>
-          )}
-        </div>
+        {showHomeLink && (
+          <Link
+            to="/"
+            className="flex items-center space-x-1 text-roomie-navy hover:text-roomie-teal transition-colors"
+          >
+            <Home className="h-5 w-5" />
+            <span>Home</span>
+          </Link>
+        )}
       </div>
     </header>
   );

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Room, RoomType } from "@/types";
+import { Room } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ const UserDashboard: React.FC = () => {
         // Fetch user's rooms
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          navigate('/auth');
+          navigate('/');
           return;
         }
 
@@ -59,33 +59,7 @@ const UserDashboard: React.FC = () => {
 
         if (error) throw error;
 
-        // Transform the data to match the Room type
-        const roomsData: Room[] = userRooms.map(ur => ({
-          ...ur.rooms,
-          createdAt: new Date(ur.rooms.created_at),
-          inviteCode: ur.rooms.invite_code,
-          type: ur.rooms.type as RoomType,
-          chores: [], // Add empty chores array as it's not fetched in this query
-          roommates: ur.rooms.roommates.map(roommate => ({
-            id: roommate.id,
-            name: roommate.name,
-            email: roommate.email || undefined,
-            phoneNumber: roommate.phone_number || undefined,
-            joinedAt: new Date(roommate.joined_at),
-            isOwner: roommate.is_owner
-          })),
-          expenses: ur.rooms.expenses.map(expense => ({
-            id: expense.id,
-            title: expense.title,
-            amount: expense.amount,
-            paidBy: expense.paid_by,
-            date: new Date(expense.date),
-            category: expense.category || undefined,
-            settled: expense.settled,
-            sharedWith: [] // We need to populate this from another query if needed
-          }))
-        }));
-
+        const roomsData = userRooms.map(ur => ur.rooms) as Room[];
         setRooms(roomsData);
       } catch (error) {
         console.error('Error fetching rooms:', error);
