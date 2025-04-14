@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +22,8 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const [isLoading, setIsLoading] = useState(false);
   const isRoomFull = room.roommates.length >= room.capacity;
   
-  // Find the current user's roommate object and check if they are the owner
-  const currentUserIsOwner = room.roommates.some(roommate => roommate.isOwner);
+  const currentUserRoommate = room.roommates.find(roommate => roommate.isCurrentUser);
+  const currentUserIsOwner = currentUserRoommate?.isOwner || false;
 
   const formatDate = (date: Date) => {
     if (typeof date === 'string') {
@@ -61,7 +60,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const runPythonScript = () => {
     setIsLoading(true);
     setPythonRunning(true);
-    // This would normally make an API call to trigger your Python script
     setTimeout(() => {
       setPythonRunning(false);
       setIsLoading(false);
@@ -86,7 +84,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
     );
   }
 
-  const capacityUtilization = room ? Math.min(100, (room.roommates.length / room.capacity) * 100) : 0;
+  const capacityUtilization = room ? Math.min(100, (room.roommates.filter(r => r.status === 'approved').length / room.capacity) * 100) : 0;
   const capacityColor = capacityUtilization < 70 
     ? 'bg-green-500' 
     : capacityUtilization < 90 

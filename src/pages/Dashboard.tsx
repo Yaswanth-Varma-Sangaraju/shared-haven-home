@@ -27,9 +27,8 @@ const Dashboard: React.FC = () => {
           // If current room matches the ID param, use it
           if (currentRoom && currentRoom.id === roomId) {
             // Check if the current user is a pending roommate
-            const currentUserPending = currentRoom.roommates.some(
-              roommate => roommate.status === 'pending'
-            );
+            const currentUserRoommate = currentRoom.roommates.find(rm => rm.isCurrentUser);
+            const currentUserPending = currentUserRoommate && currentUserRoommate.status === 'pending';
             
             if (currentUserPending) {
               setPendingApproval(true);
@@ -45,11 +44,14 @@ const Dashboard: React.FC = () => {
               
               // Check if the current user has been removed from the room
               const currentRoommate = currentRoom.roommates.find(rm => rm.isCurrentUser);
+              if (!currentRoommate) return;
+              
               const stillInRoom = updatedRoom.roommates.some(rm => 
-                rm.id === currentRoommate?.id && rm.status === 'approved'
+                rm.id === currentRoommate.id && rm.status === 'approved'
               );
               
-              if (!stillInRoom) {
+              // Don't show removal notification for owners
+              if (!stillInRoom && !currentRoommate.isOwner) {
                 // User has been removed, redirect to home page
                 toast({
                   title: "Removed from room",
@@ -62,6 +64,25 @@ const Dashboard: React.FC = () => {
               
               // User still in room, update state
               setRoom(updatedRoom);
+              
+              // Show toast notification for new roommate requests (only to owner)
+              const currentUserIsOwner = updatedRoom.roommates.some(rm => rm.isCurrentUser && rm.isOwner);
+              
+              if (currentUserIsOwner) {
+                // Check for new pending roommates
+                const newPendingRoommate = updatedRoom.roommates.find(
+                  newR => 
+                    newR.status === 'pending' && 
+                    !currentRoom.roommates.some(oldR => oldR.id === newR.id && oldR.status === 'pending')
+                );
+                
+                if (newPendingRoommate) {
+                  toast({
+                    title: "New roommate request",
+                    description: `${newPendingRoommate.name} has requested to join the room.`,
+                  });
+                }
+              }
               
               // Show toast notification when roommates change
               if (updatedRoom.roommates.length > currentRoom.roommates.length) {
@@ -101,9 +122,8 @@ const Dashboard: React.FC = () => {
           
           if (currentRoom) {
             // Check if the current user is a pending roommate
-            const currentUserPending = currentRoom.roommates.some(
-              roommate => roommate.status === 'pending'
-            );
+            const currentUserRoommate = currentRoom.roommates.find(rm => rm.isCurrentUser);
+            const currentUserPending = currentUserRoommate && currentUserRoommate.status === 'pending';
             
             if (currentUserPending) {
               setPendingApproval(true);
@@ -119,11 +139,14 @@ const Dashboard: React.FC = () => {
               
               // Check if the current user has been removed from the room
               const currentRoommate = currentRoom.roommates.find(rm => rm.isCurrentUser);
+              if (!currentRoommate) return;
+              
               const stillInRoom = updatedRoom.roommates.some(rm => 
-                rm.id === currentRoommate?.id && rm.status === 'approved'
+                rm.id === currentRoommate.id && rm.status === 'approved'
               );
               
-              if (!stillInRoom) {
+              // Don't show removal notification for owners
+              if (!stillInRoom && !currentRoommate.isOwner) {
                 // User has been removed, redirect to home page
                 toast({
                   title: "Removed from room",

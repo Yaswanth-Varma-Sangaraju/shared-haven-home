@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, DollarSign, Loader2 } from "lucide-react";
+import { Home, DollarSign, Loader2, Clock, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const UserDashboard: React.FC = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [pendingRooms, setPendingRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -42,7 +45,8 @@ const UserDashboard: React.FC = () => {
                 email,
                 phone_number,
                 joined_at,
-                is_owner
+                is_owner,
+                status
               ),
               expenses (
                 id,
@@ -60,9 +64,12 @@ const UserDashboard: React.FC = () => {
         if (error) throw error;
 
         // Transform the data to match the Room type
-        const roomsData = userRooms.map(ur => {
+        const approvedRooms: Room[] = [];
+        const pendingRoomsList: Room[] = [];
+        
+        userRooms.forEach(ur => {
           const roomData = ur.rooms;
-          return {
+          const room: Room = {
             id: roomData.id,
             name: roomData.name,
             address: roomData.address,
@@ -76,23 +83,34 @@ const UserDashboard: React.FC = () => {
               email: rm.email || undefined,
               phoneNumber: rm.phone_number || undefined,
               joinedAt: new Date(rm.joined_at),
-              isOwner: rm.is_owner
+              isOwner: rm.is_owner,
+              status: rm.status || 'approved',
+              isCurrentUser: true // Mark as current user
             })),
             expenses: roomData.expenses.map(exp => ({
               id: exp.id,
               title: exp.title,
               amount: exp.amount,
               paidBy: exp.paid_by,
-              sharedWith: [], // To be implemented
+              sharedWith: [], // Default empty
               date: new Date(exp.date),
               category: exp.category || undefined,
               settled: exp.settled
             })),
             chores: [] // Default empty chores array as it's not being fetched here
-          } as Room;
+          };
+          
+          // Check if the current user has a pending status in this room
+          const currentUserRoommate = room.roommates.find(rm => rm.isCurrentUser);
+          if (currentUserRoommate && currentUserRoommate.status === 'pending') {
+            pendingRoomsList.push(room);
+          } else {
+            approvedRooms.push(room);
+          }
         });
         
-        setRooms(roomsData);
+        setRooms(approvedRooms);
+        setPendingRooms(pendingRoomsList);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       } finally {
@@ -121,7 +139,40 @@ const UserDashboard: React.FC = () => {
       <div className="container mx-auto px-4 py-8 flex-1">
         <h1 className="text-3xl font-bold mb-6">My Dashboard</h1>
         
-        {rooms.length === 0 ? (
+        {pendingRooms.length > 0 && (
+          <div className="mb-6">
+            <Alert variant="default" className="bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                You have {pendingRooms.length} pending room {pendingRooms.length === 1 ? 'request' : 'requests'} waiting for owner approval.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="mt-4 space-y-4">
+              {pendingRooms.map(room => (
+                <Card key={room.id} className="border-amber-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Home className="inline-block mr-2 h-4 w-4 text-amber-600" />
+                      {room.name}
+                      <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
+                        <Clock className="h-3 w-3 mr-1" /> Pending
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-muted-foreground">
+                      <p>{room.address}</p>
+                      <p className="mt-2 text-amber-800">Your request to join this room is pending approval from the owner.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {rooms.length === 0 && pendingRooms.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <p className="text-xl text-gray-600">You haven't joined any rooms yet.</p>
             <Button 
@@ -131,7 +182,7 @@ const UserDashboard: React.FC = () => {
               Join a Room
             </Button>
           </div>
-        ) : (
+        ) : rooms.length > 0 && (
           <Tabs defaultValue="rooms" className="space-y-4">
             <TabsList className="grid grid-cols-2 w-full max-w-md">
               <TabsTrigger value="rooms">My Rooms</TabsTrigger>
@@ -158,7 +209,7 @@ const UserDashboard: React.FC = () => {
                     <div className="text-sm text-muted-foreground">
                       <p>{room.address}</p>
                       <p>Type: {room.type}</p>
-                      <p>Roommates: {room.roommates.length}/{room.capacity}</p>
+                      <p>Roommates: {room.roommates.filter(r => r.status === 'approved').length}/{room.capacity}</p>
                     </div>
                   </CardContent>
                 </Card>

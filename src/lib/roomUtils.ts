@@ -118,12 +118,11 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
       return null;
     }
 
-    // Get roommates
+    // Get all roommates (both approved and pending)
     const { data: roommates, error: roommatesError } = await supabase
       .from('roommates')
       .select()
-      .eq('room_id', roomData.id)
-      .eq('status', 'approved'); // Only get approved roommates
+      .eq('room_id', roomData.id);
       
     if (roommatesError) {
       console.error('Error getting roommates:', roommatesError);
@@ -210,7 +209,7 @@ export const joinRoom = async (
     if (!room) return null;
 
     // Check if the room is at capacity
-    if (room.roommates.length >= room.capacity) {
+    if (room.roommates.filter(r => r.status === 'approved').length >= room.capacity) {
       console.error('Room is at full capacity');
       return null;
     }

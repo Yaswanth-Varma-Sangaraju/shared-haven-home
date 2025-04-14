@@ -119,6 +119,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
         .single();
         
       if (updatedRoom) {
+        // Convert the database response to our Room model
         const newRoom = {
           ...room,
           roommates: updatedRoom.roommates.map(rm => ({
@@ -128,7 +129,9 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
             phoneNumber: rm.phone_number || undefined,
             joinedAt: new Date(rm.joined_at),
             isOwner: rm.is_owner,
-            status: rm.status as 'pending' | 'approved'
+            status: rm.status as 'pending' | 'approved',
+            // Preserve isCurrentUser flag from existing roommates
+            isCurrentUser: room.roommates.find(existingRm => existingRm.id === rm.id)?.isCurrentUser || false
           }))
         };
         onRoomUpdate(newRoom);
