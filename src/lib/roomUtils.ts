@@ -1,3 +1,4 @@
+
 import { Room, RoomType, Roommate, Expense } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -416,6 +417,20 @@ export const setupRoomListener = (
     return () => {};
   }
 
+  // Enable PostgreSQL replication for the tables
+  const enableReplication = async () => {
+    await supabase.rpc('enable_realtime', { table_name: 'roommates' });
+    await supabase.rpc('enable_realtime', { table_name: 'expenses' });
+    await supabase.rpc('enable_realtime', { table_name: 'chores' });
+  };
+  
+  // Call the function to enable replication
+  enableReplication().catch(error => {
+    console.error('Error enabling realtime:', error);
+  });
+
+  console.log('Setting up room listener for room ID:', roomId);
+
   // Set up channel for room updates
   const channel = supabase
     .channel('room-updates')
@@ -425,10 +440,11 @@ export const setupRoomListener = (
       table: 'roommates',
       filter: `room_id=eq.${roomId}` 
     }, async (payload) => {
-      console.log('Roommate change:', payload);
+      console.log('Roommate change detected:', payload);
       // Reload the entire room data when any change happens
       const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
       if (updatedRoom) {
+        console.log('Room updated with new data:', updatedRoom);
         saveRoom(updatedRoom);
         onRoomUpdate(updatedRoom);
       }
@@ -439,7 +455,7 @@ export const setupRoomListener = (
       table: 'expenses',
       filter: `room_id=eq.${roomId}`
     }, async (payload) => {
-      console.log('Expense change:', payload);
+      console.log('Expense change detected:', payload);
       const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
       if (updatedRoom) {
         saveRoom(updatedRoom);
@@ -452,17 +468,20 @@ export const setupRoomListener = (
       table: 'chores',
       filter: `room_id=eq.${roomId}`
     }, async (payload) => {
-      console.log('Chore change:', payload);
+      console.log('Chore change detected:', payload);
       const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
       if (updatedRoom) {
         saveRoom(updatedRoom);
         onRoomUpdate(updatedRoom);
       }
     })
-    .subscribe();
+    .subscribe((status) => {
+      console.log('Realtime subscription status:', status);
+    });
 
   // Return unsubscribe function
   return () => {
+    console.log('Removing channel subscription');
     supabase.removeChannel(channel);
   };
 };
