@@ -7,7 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Room } from "@/types";
 import ExpenseTracker from "./ExpenseTracker";
 import { useToast } from "@/components/ui/use-toast";
-import { Copy, Home, Users, CheckSquare, Clipboard, ExternalLink, Loader2 } from "lucide-react";
+import { Copy, Home, Users, CheckSquare, Clipboard, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RoomDashboardProps {
   room: Room;
@@ -18,6 +19,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const { toast } = useToast();
   const [pythonRunning, setPythonRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isRoomFull = room.roommates.length >= room.capacity;
 
   const formatDate = (date: Date) => {
     if (typeof date === 'string') {
@@ -111,6 +113,16 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </div>
       </div>
 
+      {/* Room capacity alert */}
+      {isRoomFull && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            This room is at full capacity. No more roommates can join.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Room Info Cards */}
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
@@ -133,9 +145,15 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold flex items-center gap-2">
               {room.roommates.length} / {room.capacity}
+              {isRoomFull && <span className="text-sm font-normal text-amber-600 bg-amber-50 px-2 py-1 rounded">Full</span>}
             </div>
+            <Progress 
+              value={(room.roommates.length / room.capacity) * 100} 
+              className="mt-2"
+              indicatorClassName={isRoomFull ? "bg-amber-500" : "bg-roomie-teal"}
+            />
           </CardContent>
         </Card>
 

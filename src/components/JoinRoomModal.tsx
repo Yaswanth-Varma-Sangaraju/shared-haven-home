@@ -3,14 +3,15 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { joinRoom } from "@/lib/roomUtils";
+import { joinRoom, findRoomByInviteCode } from "@/lib/roomUtils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle } from "lucide-react";
 
 interface JoinRoomModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [roomCapacityError, setRoomCapacityError] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,25 +43,47 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
 
   const handleJoinRoom = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
+    setRoomCapacityError(false);
+    
     try {
-      const room = await joinRoom(
+      // First check if the room exists and has capacity
+      const room = await findRoomByInviteCode(values.inviteCode.toUpperCase());
+      if (!room) {
+        toast({
+          title: "Invalid Invite Code",
+          description: "We couldn't find a room with that invite code",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Check if room is at capacity
+      if (room.roommates.length >= room.capacity) {
+        setRoomCapacityError(true);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // If there's capacity, proceed with joining
+      const joinedRoom = await joinRoom(
         values.inviteCode.toUpperCase(), 
         values.userName,
         values.email,
         values.phoneNumber
       );
       
-      if (room) {
+      if (joinedRoom) {
         toast({
           title: "Room joined!",
-          description: `You've successfully joined ${room.name}`,
+          description: `You've successfully joined ${joinedRoom.name}`,
         });
         onOpenChange(false);
         navigate('/dashboard');
       } else {
         toast({
-          title: "Invalid Invite Code",
-          description: "We couldn't find a room with that invite code",
+          title: "Error joining room",
+          description: "There was a problem joining the room",
           variant: "destructive",
         });
       }
@@ -83,6 +107,15 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
             Join a Room
           </DialogTitle>
         </DialogHeader>
+
+        {roomCapacityError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              This room is already at capacity and cannot accept more roommates.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleJoinRoom)} className="space-y-4">
