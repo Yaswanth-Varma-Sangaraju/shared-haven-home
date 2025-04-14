@@ -70,8 +70,8 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({ open, onOpenChang
           description: `You've successfully created ${values.roomName}`,
         });
         onOpenChange(false);
-        // Navigate to the room dashboard
-        navigate(`/dashboard`);
+        // Navigate to the room dashboard with the room ID
+        navigate(`/dashboard/${newRoom.id}`);
       } else {
         throw new Error("Failed to create room");
       }
