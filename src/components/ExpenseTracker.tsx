@@ -31,11 +31,20 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ room, onRoomUpdate }) =
   const [splitEvenly, setSplitEvenly] = useState(true);
   
   useEffect(() => {
-    const calculatedBalances = calculateBalances(room.id);
-    setBalances(calculatedBalances);
+    const fetchBalances = async () => {
+      try {
+        const calculatedBalances = await calculateBalances(room.id);
+        setBalances(calculatedBalances);
+      } catch (error) {
+        console.error("Error calculating balances:", error);
+        setBalances({});
+      }
+    };
+    
+    fetchBalances();
   }, [room]);
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!title || !amount || !paidBy || selectedRoommates.length === 0) {
       toast({
         title: "Missing information",
@@ -55,31 +64,40 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ room, onRoomUpdate }) =
       return;
     }
 
-    const newExpense = addExpense(
-      room.id,
-      title,
-      amountNumber,
-      paidBy,
-      selectedRoommates,
-      category
-    );
+    try {
+      const newExpense = await addExpense(
+        room.id,
+        title,
+        amountNumber,
+        paidBy,
+        selectedRoommates,
+        category
+      );
 
-    if (newExpense) {
-      const updatedRoom = { ...room, expenses: [...room.expenses, newExpense] };
-      onRoomUpdate(updatedRoom);
-      
+      if (newExpense) {
+        const updatedRoom = { ...room, expenses: [...room.expenses, newExpense] };
+        onRoomUpdate(updatedRoom);
+        
+        toast({
+          title: "Expense added",
+          description: `Added ${title} for $${amountNumber}`,
+        });
+        
+        // Reset form
+        setTitle("");
+        setAmount("");
+        setPaidBy("");
+        setCategory("general");
+        setSelectedRoommates([]);
+        setShowAddExpenseDialog(false);
+      }
+    } catch (error) {
+      console.error("Error adding expense:", error);
       toast({
-        title: "Expense added",
-        description: `Added ${title} for $${amountNumber}`,
+        title: "Error",
+        description: "Failed to add expense. Please try again.",
+        variant: "destructive",
       });
-      
-      // Reset form
-      setTitle("");
-      setAmount("");
-      setPaidBy("");
-      setCategory("general");
-      setSelectedRoommates([]);
-      setShowAddExpenseDialog(false);
     }
   };
 

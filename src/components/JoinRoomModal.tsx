@@ -20,7 +20,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
   const [userName, setUserName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (!inviteCode || !userName) {
       toast({
         title: "Missing information",
@@ -32,7 +32,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
 
     setIsSubmitting(true);
     try {
-      const room = joinRoom(inviteCode.toUpperCase(), userName);
+      const room = await joinRoom(inviteCode.toUpperCase(), userName);
       
       if (room) {
         toast({

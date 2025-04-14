@@ -25,7 +25,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({ open, onOpenChang
   const [ownerName, setOwnerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     if (!roomName || !address || !ownerName) {
       toast({
         title: "Missing information",
@@ -37,14 +37,18 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({ open, onOpenChang
 
     setIsSubmitting(true);
     try {
-      const newRoom = createRoom(roomName, address, roomType, capacity, ownerName);
-      toast({
-        title: "Room created!",
-        description: `You've successfully created ${roomName}`,
-      });
-      onOpenChange(false);
-      // Navigate to the room dashboard
-      navigate(`/dashboard`);
+      const newRoom = await createRoom(roomName, address, roomType, capacity, ownerName);
+      if (newRoom) {
+        toast({
+          title: "Room created!",
+          description: `You've successfully created ${roomName}`,
+        });
+        onOpenChange(false);
+        // Navigate to the room dashboard
+        navigate(`/dashboard`);
+      } else {
+        throw new Error("Failed to create room");
+      }
     } catch (error) {
       console.error("Error creating room:", error);
       toast({

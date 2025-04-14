@@ -62,7 +62,7 @@ export const createRoom = async (
       id: roomData.id,
       name: roomData.name,
       address: roomData.address,
-      type: roomData.type,
+      type: roomData.type as RoomType,
       capacity: roomData.capacity,
       createdAt: new Date(roomData.created_at),
       inviteCode: roomData.invite_code,
@@ -143,7 +143,7 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
       id: roomData.id,
       name: roomData.name,
       address: roomData.address,
-      type: roomData.type,
+      type: roomData.type as RoomType,
       capacity: roomData.capacity,
       createdAt: new Date(roomData.created_at),
       inviteCode: roomData.invite_code,
@@ -391,12 +391,12 @@ export const setupRoomListener = (
   roomId: string, 
   onRoomUpdate: (room: Room) => void
 ) => {
-  // Get the initial room data
-  getCurrentRoom().then(room => {
-    if (room) {
-      onRoomUpdate(room);
-    }
-  });
+  // Get the current room
+  const currentRoom = getCurrentRoom();
+  if (!currentRoom) {
+    console.error('No current room found for listener');
+    return () => {};
+  }
 
   // Set up channel for room updates
   const channel = supabase
@@ -406,43 +406,40 @@ export const setupRoomListener = (
       schema: 'public',
       table: 'roommates',
       filter: `room_id=eq.${roomId}` 
-    }, payload => {
+    }, async (payload) => {
       console.log('Roommate change:', payload);
       // Reload the entire room data when any change happens
-      findRoomByInviteCode(room.inviteCode).then(updatedRoom => {
-        if (updatedRoom) {
-          saveRoom(updatedRoom);
-          onRoomUpdate(updatedRoom);
-        }
-      });
+      const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
+      if (updatedRoom) {
+        saveRoom(updatedRoom);
+        onRoomUpdate(updatedRoom);
+      }
     })
     .on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'expenses',
       filter: `room_id=eq.${roomId}`
-    }, payload => {
+    }, async (payload) => {
       console.log('Expense change:', payload);
-      findRoomByInviteCode(room.inviteCode).then(updatedRoom => {
-        if (updatedRoom) {
-          saveRoom(updatedRoom);
-          onRoomUpdate(updatedRoom);
-        }
-      });
+      const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
+      if (updatedRoom) {
+        saveRoom(updatedRoom);
+        onRoomUpdate(updatedRoom);
+      }
     })
     .on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'chores',
       filter: `room_id=eq.${roomId}`
-    }, payload => {
+    }, async (payload) => {
       console.log('Chore change:', payload);
-      findRoomByInviteCode(room.inviteCode).then(updatedRoom => {
-        if (updatedRoom) {
-          saveRoom(updatedRoom);
-          onRoomUpdate(updatedRoom);
-        }
-      });
+      const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
+      if (updatedRoom) {
+        saveRoom(updatedRoom);
+        onRoomUpdate(updatedRoom);
+      }
     })
     .subscribe();
 
