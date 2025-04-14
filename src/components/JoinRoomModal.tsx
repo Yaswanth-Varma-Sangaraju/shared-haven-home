@@ -7,32 +7,47 @@ import { Label } from "@/components/ui/label";
 import { joinRoom } from "@/lib/roomUtils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface JoinRoomModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const formSchema = z.object({
+  userName: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  inviteCode: z.string().length(6, "Invite code must be 6 characters")
+});
+
 const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [inviteCode, setInviteCode] = useState("");
-  const [userName, setUserName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      userName: "",
+      email: "",
+      phoneNumber: "",
+      inviteCode: ""
+    },
+  });
 
-  const handleJoinRoom = async () => {
-    if (!inviteCode || !userName) {
-      toast({
-        title: "Missing information",
-        description: "Please enter both your name and the invite code",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleJoinRoom = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      const room = await joinRoom(inviteCode.toUpperCase(), userName);
+      const room = await joinRoom(
+        values.inviteCode.toUpperCase(), 
+        values.userName,
+        values.email,
+        values.phoneNumber
+      );
       
       if (room) {
         toast({
@@ -69,45 +84,88 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="userName">Your Name</Label>
-            <Input
-              id="userName"
-              placeholder="Enter your name"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleJoinRoom)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="userName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="inviteCode">Invite Code</Label>
-            <Input
-              id="inviteCode"
-              placeholder="Enter 6-character code"
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              maxLength={6}
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="your.email@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
+            
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="inviteCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Invite Code</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter 6-character code" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      maxLength={6}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleJoinRoom}
-            className="w-full sm:w-auto bg-roomie-amber hover:bg-roomie-amber/90 text-white"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Joining..." : "Join Room"}
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto bg-roomie-amber hover:bg-roomie-amber/90 text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Joining..." : "Join Room"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

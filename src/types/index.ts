@@ -5,6 +5,7 @@ export interface Roommate {
   id: string;
   name: string;
   email?: string;
+  phoneNumber?: string;
   joinedAt: Date;
   isOwner: boolean;
 }
@@ -34,6 +35,7 @@ export interface Room {
   id: string;
   name: string;
   address: string;
+  location?: string;
   type: RoomType;
   capacity: number;
   createdAt: Date;

@@ -15,9 +15,12 @@ export const generateInviteCode = (): string => {
 export const createRoom = async (
   name: string,
   address: string,
+  location: string,
   type: RoomType,
   capacity: number,
-  ownerName: string
+  ownerName: string,
+  email?: string,
+  phoneNumber?: string
 ): Promise<Room | null> => {
   try {
     // Generate invite code
@@ -29,6 +32,7 @@ export const createRoom = async (
       .insert({
         name,
         address,
+        location,
         type,
         capacity,
         invite_code: inviteCode
@@ -47,6 +51,8 @@ export const createRoom = async (
       .insert({
         room_id: roomData.id,
         name: ownerName,
+        email,
+        phone_number: phoneNumber,
         is_owner: true
       })
       .select()
@@ -62,6 +68,7 @@ export const createRoom = async (
       id: roomData.id,
       name: roomData.name,
       address: roomData.address,
+      location: roomData.location,
       type: roomData.type as RoomType,
       capacity: roomData.capacity,
       createdAt: new Date(roomData.created_at),
@@ -70,6 +77,7 @@ export const createRoom = async (
         id: roommateData.id,
         name: roommateData.name,
         email: roommateData.email,
+        phoneNumber: roommateData.phone_number,
         joinedAt: new Date(roommateData.joined_at),
         isOwner: roommateData.is_owner
       }],
@@ -143,6 +151,7 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
       id: roomData.id,
       name: roomData.name,
       address: roomData.address,
+      location: roomData.location || '',
       type: roomData.type as RoomType,
       capacity: roomData.capacity,
       createdAt: new Date(roomData.created_at),
@@ -151,6 +160,7 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
         id: r.id,
         name: r.name,
         email: r.email || undefined,
+        phoneNumber: r.phone_number || undefined,
         joinedAt: new Date(r.joined_at),
         isOwner: r.is_owner
       })) || [],
@@ -183,7 +193,12 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
 };
 
 // Join room by invite code
-export const joinRoom = async (inviteCode: string, userName: string): Promise<Room | null> => {
+export const joinRoom = async (
+  inviteCode: string, 
+  userName: string,
+  email?: string,
+  phoneNumber?: string
+): Promise<Room | null> => {
   try {
     // Find the room first
     const room = await findRoomByInviteCode(inviteCode);
@@ -195,6 +210,8 @@ export const joinRoom = async (inviteCode: string, userName: string): Promise<Ro
       .insert({
         room_id: room.id,
         name: userName,
+        email,
+        phone_number: phoneNumber,
         is_owner: false
       })
       .select()
@@ -210,6 +227,7 @@ export const joinRoom = async (inviteCode: string, userName: string): Promise<Ro
       id: roommateData.id,
       name: roommateData.name,
       email: roommateData.email || undefined,
+      phoneNumber: roommateData.phone_number || undefined,
       joinedAt: new Date(roommateData.joined_at),
       isOwner: roommateData.is_owner
     });
