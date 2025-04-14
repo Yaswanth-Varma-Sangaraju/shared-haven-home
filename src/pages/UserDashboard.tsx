@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Room } from "@/types";
+import { Room, RoomType } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -73,7 +73,8 @@ const UserDashboard: React.FC = () => {
             id: roomData.id,
             name: roomData.name,
             address: roomData.address,
-            type: roomData.type,
+            location: roomData.location || '',
+            type: roomData.type as RoomType,
             capacity: roomData.capacity,
             createdAt: new Date(roomData.created_at),
             inviteCode: roomData.invite_code,
@@ -84,7 +85,7 @@ const UserDashboard: React.FC = () => {
               phoneNumber: rm.phone_number || undefined,
               joinedAt: new Date(rm.joined_at),
               isOwner: rm.is_owner,
-              status: rm.status || 'approved',
+              status: rm.status as 'approved' | 'pending',
               isCurrentUser: true // Mark as current user
             })),
             expenses: roomData.expenses.map(exp => ({

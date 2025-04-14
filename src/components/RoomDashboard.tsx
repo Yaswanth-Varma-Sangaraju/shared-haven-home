@@ -20,8 +20,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const { toast } = useToast();
   const [pythonRunning, setPythonRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const isRoomFull = room.roommates.length >= room.capacity;
-  
+
   const currentUserRoommate = room.roommates.find(roommate => roommate.isCurrentUser);
   const currentUserIsOwner = currentUserRoommate?.isOwner || false;
 
@@ -84,7 +83,10 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
     );
   }
 
-  const capacityUtilization = room ? Math.min(100, (room.roommates.filter(r => r.status === 'approved').length / room.capacity) * 100) : 0;
+  const approvedRoommateCount = room.roommates.filter(rm => rm.status === 'approved').length;
+  const isRoomFull = approvedRoommateCount >= room.capacity;
+
+  const capacityUtilization = room ? Math.min(100, (approvedRoommateCount / room.capacity) * 100) : 0;
   const capacityColor = capacityUtilization < 70 
     ? 'bg-green-500' 
     : capacityUtilization < 90 
@@ -153,8 +155,8 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
               <div className="flex items-center gap-2 text-sm">
-                <span>Capacity: {room?.roommates.length}/{room?.capacity}</span>
-                {room?.roommates.length >= room?.capacity && (
+                <span>Capacity: {approvedRoommateCount}/{room?.capacity}</span>
+                {isRoomFull && (
                   <Badge variant="outline" className="bg-red-100 text-red-800 border-red-800">
                     Full
                   </Badge>

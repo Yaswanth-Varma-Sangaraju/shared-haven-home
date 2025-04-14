@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Loader2, UserCheck, UserX, UserMinus, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +38,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
   const [pendingRoommates, setPendingRoommates] = useState<PendingRoommate[]>([]);
   const [loading, setLoading] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   // Fetch pending roommates (those who have used invite code but haven't been approved)
   useEffect(() => {
@@ -77,7 +78,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
     };
 
     fetchPendingRoommates();
-  }, [room.id, isOwner]);
+  }, [room.id, isOwner, toast]);
 
   // Accept a pending roommate
   const acceptRoommate = async (roommateId: string) => {
@@ -245,6 +246,8 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
     }
   };
 
+  const currentRoommates = room.roommates.filter(roommate => roommate.status === 'approved');
+
   return (
     <div className="space-y-6">
       {isOwner && (
@@ -343,7 +346,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {room.roommates.map((roommate) => (
+            {currentRoommates.map((roommate) => (
               <div 
                 key={roommate.id}
                 className="flex justify-between items-center p-3 border rounded-lg"
@@ -364,7 +367,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
                       Owner
                     </Badge>
                   )}
-                  {isOwner && !roommate.isOwner && (
+                  {isOwner && !roommate.isOwner && !roommate.isCurrentUser && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
