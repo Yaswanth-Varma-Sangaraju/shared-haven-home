@@ -59,7 +59,39 @@ const UserDashboard: React.FC = () => {
 
         if (error) throw error;
 
-        const roomsData = userRooms.map(ur => ur.rooms) as Room[];
+        // Transform the data to match the Room type
+        const roomsData = userRooms.map(ur => {
+          const roomData = ur.rooms;
+          return {
+            id: roomData.id,
+            name: roomData.name,
+            address: roomData.address,
+            type: roomData.type,
+            capacity: roomData.capacity,
+            createdAt: new Date(roomData.created_at),
+            inviteCode: roomData.invite_code,
+            roommates: roomData.roommates.map(rm => ({
+              id: rm.id,
+              name: rm.name,
+              email: rm.email || undefined,
+              phoneNumber: rm.phone_number || undefined,
+              joinedAt: new Date(rm.joined_at),
+              isOwner: rm.is_owner
+            })),
+            expenses: roomData.expenses.map(exp => ({
+              id: exp.id,
+              title: exp.title,
+              amount: exp.amount,
+              paidBy: exp.paid_by,
+              sharedWith: [], // To be implemented
+              date: new Date(exp.date),
+              category: exp.category || undefined,
+              settled: exp.settled
+            })),
+            chores: [] // Default empty chores array as it's not being fetched here
+          } as Room;
+        });
+        
         setRooms(roomsData);
       } catch (error) {
         console.error('Error fetching rooms:', error);

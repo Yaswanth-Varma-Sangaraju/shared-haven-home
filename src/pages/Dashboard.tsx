@@ -42,6 +42,11 @@ const Dashboard: React.FC = () => {
                     description: `${newRoommate.name} has joined the room.`,
                   });
                 }
+              } else if (updatedRoom.roommates.length < currentRoom.roommates.length) {
+                toast({
+                  title: "Roommate removed",
+                  description: "A roommate has been removed from the room.",
+                });
               }
             });
             

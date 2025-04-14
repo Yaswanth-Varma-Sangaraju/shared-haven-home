@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Copy, Home, Users, CheckSquare, Clipboard, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import RoommateManagement from "./RoommateManagement";
 
 interface RoomDashboardProps {
   room: Room;
@@ -20,6 +21,8 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const [pythonRunning, setPythonRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isRoomFull = room.roommates.length >= room.capacity;
+  
+  const currentUserIsOwner = room.roommates.some(roommate => roommate.isOwner);
 
   const formatDate = (date: Date) => {
     if (typeof date === 'string') {
@@ -210,7 +213,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="expenses" className="space-y-4">
+      <Tabs defaultValue="roommates" className="space-y-4">
         <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="roommates">Roommates</TabsTrigger>
@@ -222,39 +225,11 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </TabsContent>
         
         <TabsContent value="roommates" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5 text-roomie-amber" />
-                Roommates
-              </CardTitle>
-              <CardDescription>
-                All roommates in {room.name}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {room.roommates.map((roommate) => (
-                  <div 
-                    key={roommate.id}
-                    className="flex justify-between items-center p-3 border rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">{roommate.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Joined {formatDate(roommate.joinedAt)}
-                      </p>
-                    </div>
-                    {roommate.isOwner && (
-                      <div className="bg-roomie-teal/10 text-roomie-teal text-xs font-medium px-2 py-1 rounded">
-                        Room Owner
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <RoommateManagement 
+            room={room} 
+            isOwner={currentUserIsOwner} 
+            onRoomUpdate={onRoomUpdate} 
+          />
         </TabsContent>
         
         <TabsContent value="chores" className="space-y-4">

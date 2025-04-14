@@ -120,7 +120,8 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
     const { data: roommates, error: roommatesError } = await supabase
       .from('roommates')
       .select()
-      .eq('room_id', roomData.id);
+      .eq('room_id', roomData.id)
+      .eq('status', 'approved'); // Only get approved roommates
       
     if (roommatesError) {
       console.error('Error getting roommates:', roommatesError);
@@ -205,7 +206,13 @@ export const joinRoom = async (
     const room = await findRoomByInviteCode(inviteCode);
     if (!room) return null;
 
-    // Add new roommate
+    // Check if the room is at capacity
+    if (room.roommates.length >= room.capacity) {
+      console.error('Room is at full capacity');
+      return null;
+    }
+
+    // Add new roommate with pending status
     const { data: roommateData, error: roommateError } = await supabase
       .from('roommates')
       .insert({
@@ -213,7 +220,8 @@ export const joinRoom = async (
         name: userName,
         email,
         phone_number: phoneNumber,
-        is_owner: false
+        is_owner: false,
+        status: 'pending' // Set status as pending for owner approval
       })
       .select()
       .single();
@@ -223,17 +231,8 @@ export const joinRoom = async (
       return null;
     }
     
-    // Add the new roommate to our room object
-    room.roommates.push({
-      id: roommateData.id,
-      name: roommateData.name,
-      email: roommateData.email || undefined,
-      phoneNumber: roommateData.phone_number || undefined,
-      joinedAt: new Date(roommateData.joined_at),
-      isOwner: roommateData.is_owner
-    });
-    
-    // Save to localStorage
+    // Return the room, but don't add the pending roommate to the roommates array yet
+    // They will appear after the owner approves them
     saveRoom(room);
     
     return room;
@@ -402,6 +401,48 @@ export const getCurrentRoom = (): Room | null => {
   } catch (error) {
     console.error('Error parsing current room:', error);
     return null;
+  }
+};
+
+// Accept a roommate request
+export const acceptRoommateRequest = async (roomId: string, roommateId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('roommates')
+      .update({ status: 'approved' })
+      .eq('id', roommateId)
+      .eq('room_id', roomId);
+    
+    if (error) {
+      console.error('Error accepting roommate request:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in acceptRoommateRequest:', error);
+    return false;
+  }
+};
+
+// Decline/remove a roommate
+export const removeRoommate = async (roomId: string, roommateId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('roommates')
+      .delete()
+      .eq('id', roommateId)
+      .eq('room_id', roomId);
+    
+    if (error) {
+      console.error('Error removing roommate:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in removeRoommate:', error);
+    return false;
   }
 };
 
