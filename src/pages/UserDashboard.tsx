@@ -59,7 +59,14 @@ const UserDashboard: React.FC = () => {
 
         if (error) throw error;
 
-        const roomsData = userRooms.map(ur => ur.rooms) as Room[];
+        // Transform the data to match the Room type
+        const roomsData: Room[] = userRooms.map(ur => ({
+          ...ur.rooms,
+          createdAt: ur.rooms.created_at,
+          inviteCode: ur.rooms.invite_code,
+          chores: [], // Add empty chores array as it's not fetched in this query
+        }));
+
         setRooms(roomsData);
       } catch (error) {
         console.error('Error fetching rooms:', error);
