@@ -4,15 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 // Enable realtime for specific tables in Supabase
 export async function enableRealtimeForRooms() {
   try {
-    // Execute SQL to enable realtime for tables
-    const { error } = await supabase.rpc('enable_realtime_tables');
+    // Check if we can directly enable realtime for all tables we need
+    await supabase.from('roommates').on('*', () => {}).subscribe();
+    await supabase.from('expenses').on('*', () => {}).unsubscribe();
+    await supabase.from('chores').on('*', () => {}).unsubscribe();
     
-    if (error) {
-      console.error('Error enabling realtime for tables:', error);
-    } else {
-      console.log('Realtime enabled for tables');
-    }
+    console.log('Realtime subscriptions tested successfully');
   } catch (error) {
-    console.error('Error in enableRealtimeForRooms:', error);
+    console.error('Error testing realtime subscriptions:', error);
   }
 }

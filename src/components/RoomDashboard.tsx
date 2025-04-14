@@ -1,13 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Room } from "@/types";
 import ExpenseTracker from "./ExpenseTracker";
 import { useToast } from "@/components/ui/use-toast";
-import { Copy, Home, Users, CheckSquare, Clipboard, ExternalLink } from "lucide-react";
+import { Copy, Home, Users, CheckSquare, Clipboard, ExternalLink, Loader2 } from "lucide-react";
 
 interface RoomDashboardProps {
   room: Room;
@@ -17,6 +17,7 @@ interface RoomDashboardProps {
 const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => {
   const { toast } = useToast();
   const [pythonRunning, setPythonRunning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const formatDate = (date: Date) => {
     if (typeof date === 'string') {
@@ -51,16 +52,33 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   };
 
   const runPythonScript = () => {
+    setIsLoading(true);
     setPythonRunning(true);
     // This would normally make an API call to trigger your Python script
     setTimeout(() => {
       setPythonRunning(false);
+      setIsLoading(false);
       toast({
         title: "Python Script Executed",
         description: "Your Python script was executed successfully",
       });
     }, 2000);
   };
+
+  // Reset loading state when component mounts
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-roomie-teal" />
+        <p className="text-muted-foreground">Loading room data...</p>
+        <Progress value={80} className="w-64" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -152,7 +170,12 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
             onClick={runPythonScript}
             disabled={pythonRunning}
           >
-            {pythonRunning ? "Running..." : "Run Python Script"}
+            {pythonRunning ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Running...
+              </>
+            ) : "Run Python Script"}
           </Button>
         </CardContent>
       </Card>

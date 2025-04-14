@@ -6,6 +6,7 @@ import { Room } from "@/types";
 import Header from "@/components/Header";
 import RoomDashboard from "@/components/RoomDashboard";
 import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -25,16 +26,22 @@ const Dashboard: React.FC = () => {
         setRoom(updatedRoom);
         
         // Show toast notification when roommates change
-        const prevRoommates = currentRoom.roommates.length;
-        const currentRoommates = updatedRoom.roommates.length;
-        
-        if (currentRoommates > prevRoommates) {
-          toast({
-            title: "New roommate joined!",
-            description: `${updatedRoom.roommates[updatedRoom.roommates.length - 1].name} has joined the room.`,
-          });
+        if (updatedRoom.roommates.length > currentRoom.roommates.length) {
+          const newRoommate = updatedRoom.roommates.find(
+            newR => !currentRoom.roommates.some(oldR => oldR.id === newR.id)
+          );
+          
+          if (newRoommate) {
+            toast({
+              title: "New roommate joined!",
+              description: `${newRoommate.name} has joined the room.`,
+            });
+          }
         }
       });
+      
+      // Set loading to false after a short delay to ensure data is processed
+      setTimeout(() => setLoading(false), 500);
       
       // Cleanup subscription on component unmount
       return () => {
@@ -43,15 +50,18 @@ const Dashboard: React.FC = () => {
     } else {
       // If no room found, redirect to home page
       navigate("/", { replace: true });
+      setLoading(false);
     }
-    
-    setLoading(false);
   }, [navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center space-y-3">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto text-roomie-teal" />
+          <div className="text-lg font-medium">Loading your room...</div>
+          <div className="text-sm text-muted-foreground">Please wait while we fetch the latest data</div>
+        </div>
       </div>
     );
   }
