@@ -67,7 +67,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
     }, 2000);
   };
 
-  // Reset loading state when component mounts
   useEffect(() => {
     setIsLoading(false);
   }, []);
@@ -82,7 +81,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
     );
   }
 
-  // Calculate capacity utilization
   const capacityUtilization = room ? Math.min(100, (room.roommates.length / room.capacity) * 100) : 0;
   const capacityColor = capacityUtilization < 70 
     ? 'bg-green-500' 
@@ -92,7 +90,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
 
   return (
     <div className="space-y-8">
-      {/* Room Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">{room.name}</h1>
@@ -121,9 +118,8 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </div>
       </div>
 
-      {/* Room capacity alert */}
       {isRoomFull && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+        <Alert variant="default" className="bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800">
             This room is at full capacity. No more roommates can join.
@@ -131,7 +127,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </Alert>
       )}
 
-      {/* Room Info Cards */}
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -189,7 +184,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </Card>
       </div>
 
-      {/* Run Python Script Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -216,7 +210,6 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
         </CardContent>
       </Card>
 
-      {/* Tabs for different sections */}
       <Tabs defaultValue="expenses" className="space-y-4">
         <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="expenses">Expenses</TabsTrigger>

@@ -147,6 +147,7 @@ export type Database = {
           name: string
           phone_number: string | null
           room_id: string
+          user_id: string | null
         }
         Insert: {
           email?: string | null
@@ -156,6 +157,7 @@ export type Database = {
           name: string
           phone_number?: string | null
           room_id: string
+          user_id?: string | null
         }
         Update: {
           email?: string | null
@@ -165,6 +167,7 @@ export type Database = {
           name?: string
           phone_number?: string | null
           room_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -172,6 +175,13 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roommates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -206,6 +216,60 @@ export type Database = {
           location?: string | null
           name?: string
           type?: string
+        }
+        Relationships: []
+      }
+      user_rooms: {
+        Row: {
+          id: string
+          joined_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rooms_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_rooms_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
         }
         Relationships: []
       }
