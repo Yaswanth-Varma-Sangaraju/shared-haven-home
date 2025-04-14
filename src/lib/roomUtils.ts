@@ -234,11 +234,28 @@ export const joinRoom = async (
       return null;
     }
     
-    // Return the room, but don't add the pending roommate to the roommates array yet
-    // They will appear after the owner approves them
-    saveRoom(room);
+    // Add the pending roommate to the room object
+    const updatedRoom = {
+      ...room,
+      roommates: [
+        ...room.roommates,
+        {
+          id: roommateData.id,
+          name: roommateData.name,
+          email: roommateData.email || undefined,
+          phoneNumber: roommateData.phone_number || undefined,
+          joinedAt: new Date(roommateData.joined_at),
+          isOwner: roommateData.is_owner,
+          status: 'pending' as 'pending' | 'approved',
+          isCurrentUser: true
+        }
+      ]
+    };
+
+    // Save the updated room to localStorage
+    saveRoom(updatedRoom);
     
-    return room;
+    return updatedRoom;
   } catch (error) {
     console.error('Error in joinRoom:', error);
     return null;
@@ -481,6 +498,9 @@ export const setupRoomListener = (
     return () => {};
   }
 
+  // Find the current user's roommate ID
+  const currentUserRoommate = currentRoom.roommates.find(rm => rm.isCurrentUser);
+  
   // Enable realtime for the necessary tables
   enableRealtimeForRooms()
     .catch(error => {
@@ -503,6 +523,18 @@ export const setupRoomListener = (
       const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
       if (updatedRoom) {
         console.log('Room updated with new data:', updatedRoom);
+        
+        // Mark the current user's roommate as isCurrentUser
+        if (currentUserRoommate) {
+          const updatedRoommates = updatedRoom.roommates.map(rm => {
+            if (rm.id === currentUserRoommate.id) {
+              return { ...rm, isCurrentUser: true };
+            }
+            return rm;
+          });
+          updatedRoom.roommates = updatedRoommates;
+        }
+        
         saveRoom(updatedRoom);
         onRoomUpdate(updatedRoom);
       }
@@ -516,6 +548,17 @@ export const setupRoomListener = (
       console.log('Expense change detected:', payload);
       const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
       if (updatedRoom) {
+        // Mark the current user's roommate as isCurrentUser
+        if (currentUserRoommate) {
+          const updatedRoommates = updatedRoom.roommates.map(rm => {
+            if (rm.id === currentUserRoommate.id) {
+              return { ...rm, isCurrentUser: true };
+            }
+            return rm;
+          });
+          updatedRoom.roommates = updatedRoommates;
+        }
+        
         saveRoom(updatedRoom);
         onRoomUpdate(updatedRoom);
       }
@@ -529,6 +572,17 @@ export const setupRoomListener = (
       console.log('Chore change detected:', payload);
       const updatedRoom = await findRoomByInviteCode(currentRoom.inviteCode);
       if (updatedRoom) {
+        // Mark the current user's roommate as isCurrentUser
+        if (currentUserRoommate) {
+          const updatedRoommates = updatedRoom.roommates.map(rm => {
+            if (rm.id === currentUserRoommate.id) {
+              return { ...rm, isCurrentUser: true };
+            }
+            return rm;
+          });
+          updatedRoom.roommates = updatedRoommates;
+        }
+        
         saveRoom(updatedRoom);
         onRoomUpdate(updatedRoom);
       }

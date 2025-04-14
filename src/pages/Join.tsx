@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { findRoomByInviteCode } from "@/lib/roomUtils";
@@ -131,8 +132,8 @@ const Join: React.FC = () => {
       
       if (joinedRoom) {
         toast({
-          title: "Room joined!",
-          description: `You've successfully joined ${joinedRoom.name}`,
+          title: "Request sent!",
+          description: `Your request to join ${joinedRoom.name} has been sent to the room owner for approval.`,
         });
         navigate("/dashboard");
       } else {
@@ -186,6 +187,13 @@ const Join: React.FC = () => {
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <Alert className="bg-amber-50 border-amber-200 mb-4">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      Your request to join will need to be approved by the room owner before you can access the room.
+                    </AlertDescription>
+                  </Alert>
+
                   {duplicateError && (
                     <Alert variant="destructive" className="mb-4">
                       <AlertCircle className="h-4 w-4" />
@@ -246,10 +254,10 @@ const Join: React.FC = () => {
                       {joining ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Joining...
+                          Sending request...
                         </>
                       ) : (
-                        "Join Room"
+                        "Request to Join"
                       )}
                     </Button>
                   </div>
