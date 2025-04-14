@@ -62,11 +62,28 @@ const UserDashboard: React.FC = () => {
         // Transform the data to match the Room type
         const roomsData: Room[] = userRooms.map(ur => ({
           ...ur.rooms,
-          // Convert string dates to Date objects
           createdAt: new Date(ur.rooms.created_at),
           inviteCode: ur.rooms.invite_code,
           type: ur.rooms.type as RoomType,
           chores: [], // Add empty chores array as it's not fetched in this query
+          roommates: ur.rooms.roommates.map(roommate => ({
+            id: roommate.id,
+            name: roommate.name,
+            email: roommate.email || undefined,
+            phoneNumber: roommate.phone_number || undefined,
+            joinedAt: new Date(roommate.joined_at),
+            isOwner: roommate.is_owner
+          })),
+          expenses: ur.rooms.expenses.map(expense => ({
+            id: expense.id,
+            title: expense.title,
+            amount: expense.amount,
+            paidBy: expense.paid_by,
+            date: new Date(expense.date),
+            category: expense.category || undefined,
+            settled: expense.settled,
+            sharedWith: [] // We need to populate this from another query if needed
+          }))
         }));
 
         setRooms(roomsData);
