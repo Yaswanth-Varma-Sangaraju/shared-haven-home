@@ -14,18 +14,18 @@ import Header from "@/components/Header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
-// Simple email validation to accommodate various email formats including Gmail
+// Very simple email validation to accept any properly formatted email
 const emailSchema = z.string().email({ message: "Please enter a valid email address" });
 
 const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(6, "Password must be at least 6 characters")
+  email: z.string().min(1, "Email is required"),
+  password: z.string().min(1, "Password is required")
 });
 
 const signupSchema = z.object({
-  email: emailSchema,
+  email: z.string().min(1, "Email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string()
+  confirmPassword: z.string().min(1, "Please confirm your password")
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords must match",
   path: ["confirmPassword"]
@@ -71,6 +71,13 @@ const Auth: React.FC = () => {
     setIsLoading(true);
     setAuthError(null);
     
+    // Validate email format manually before submitting
+    if (!isValidEmail(values.email)) {
+      setAuthError("Please enter a valid email address");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
@@ -103,6 +110,13 @@ const Auth: React.FC = () => {
     setIsLoading(true);
     setAuthError(null);
     
+    // Validate email format manually before submitting
+    if (!isValidEmail(values.email)) {
+      setAuthError("Please enter a valid email address");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -134,6 +148,13 @@ const Auth: React.FC = () => {
     }
   };
 
+  // Helper function to validate email format
+  const isValidEmail = (email: string) => {
+    // Simple regex that should accept most valid email formats including Gmail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
@@ -150,6 +171,7 @@ const Auth: React.FC = () => {
           <CardContent>
             {authError && (
               <Alert variant="destructive" className="mb-4">
+                <ExclamationTriangleIcon className="h-4 w-4" />
                 <AlertTitle>Authentication Error</AlertTitle>
                 <AlertDescription>{authError}</AlertDescription>
               </Alert>
@@ -167,7 +189,7 @@ const Auth: React.FC = () => {
                         <FormControl>
                           <Input 
                             placeholder="you@example.com" 
-                            type="email"
+                            type="text"
                             autoComplete="email"
                             {...field} 
                           />
@@ -215,7 +237,7 @@ const Auth: React.FC = () => {
                         <FormControl>
                           <Input 
                             placeholder="you@example.com" 
-                            type="email"
+                            type="text"
                             autoComplete="email"
                             {...field} 
                           />
@@ -276,6 +298,12 @@ const Auth: React.FC = () => {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setAuthError(null); // Clear errors when switching forms
+                  // Reset form values when switching
+                  if (isLogin) {
+                    signupForm.reset();
+                  } else {
+                    loginForm.reset();
+                  }
                 }}
                 disabled={isLoading}
               >
