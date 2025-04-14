@@ -1,6 +1,6 @@
-
 import { Room, RoomType, Roommate, Expense } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { enableRealtimeForRooms } from "./supabaseSetup";
 
 // Generate a unique invite code
 export const generateInviteCode = (): string => {
@@ -417,17 +417,11 @@ export const setupRoomListener = (
     return () => {};
   }
 
-  // Enable PostgreSQL replication for the tables
-  const enableReplication = async () => {
-    await supabase.rpc('enable_realtime', { table_name: 'roommates' });
-    await supabase.rpc('enable_realtime', { table_name: 'expenses' });
-    await supabase.rpc('enable_realtime', { table_name: 'chores' });
-  };
-  
-  // Call the function to enable replication
-  enableReplication().catch(error => {
-    console.error('Error enabling realtime:', error);
-  });
+  // Enable realtime for the necessary tables
+  enableRealtimeForRooms()
+    .catch(error => {
+      console.error('Error enabling realtime for rooms:', error);
+    });
 
   console.log('Setting up room listener for room ID:', roomId);
 
