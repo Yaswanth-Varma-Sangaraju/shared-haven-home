@@ -81,7 +81,14 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
 
   // Accept a pending roommate
   const acceptRoommate = async (roommateId: string) => {
-    if (!isOwner) return;
+    if (!isOwner) {
+      toast({
+        title: "Permission Denied",
+        description: "Only room owners can accept roommate requests",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setProcessingIds(prev => new Set(prev).add(roommateId));
     
@@ -121,7 +128,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
             phoneNumber: rm.phone_number || undefined,
             joinedAt: new Date(rm.joined_at),
             isOwner: rm.is_owner,
-            status: rm.status
+            status: rm.status as 'pending' | 'approved'
           }))
         };
         onRoomUpdate(newRoom);
@@ -144,7 +151,14 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
 
   // Decline a pending roommate
   const declineRoommate = async (roommateId: string) => {
-    if (!isOwner) return;
+    if (!isOwner) {
+      toast({
+        title: "Permission Denied",
+        description: "Only room owners can decline roommate requests",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setProcessingIds(prev => new Set(prev).add(roommateId));
     
@@ -181,7 +195,14 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
 
   // Remove an existing roommate
   const removeRoommate = async (roommateId: string) => {
-    if (!isOwner) return;
+    if (!isOwner) {
+      toast({
+        title: "Permission Denied",
+        description: "Only room owners can remove roommates",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setProcessingIds(prev => new Set(prev).add(roommateId));
     

@@ -23,6 +23,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const [isLoading, setIsLoading] = useState(false);
   const isRoomFull = room.roommates.length >= room.capacity;
   
+  // Find the current user's roommate object and check if they are the owner
   const currentUserIsOwner = room.roommates.some(roommate => roommate.isOwner);
 
   const formatDate = (date: Date) => {

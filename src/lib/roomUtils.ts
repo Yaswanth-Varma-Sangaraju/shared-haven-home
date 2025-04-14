@@ -82,7 +82,7 @@ export const createRoom = async (
         phoneNumber: roommateData.phone_number,
         joinedAt: new Date(roommateData.joined_at),
         isOwner: roommateData.is_owner,
-        status: roommateData.status
+        status: 'approved'
       }],
       expenses: [],
       chores: []
@@ -167,7 +167,7 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
         phoneNumber: r.phone_number || undefined,
         joinedAt: new Date(r.joined_at),
         isOwner: r.is_owner,
-        status: r.status
+        status: r.status as 'pending' | 'approved'
       })) || [],
       expenses: expenses?.map(e => ({
         id: e.id,
@@ -410,6 +410,16 @@ export const getCurrentRoom = (): Room | null => {
 // Accept a roommate request
 export const acceptRoommateRequest = async (roomId: string, roommateId: string): Promise<boolean> => {
   try {
+    // First check if the user is the room owner
+    const currentRoom = getCurrentRoom();
+    if (!currentRoom) return false;
+    
+    const isOwner = currentRoom.roommates.some(rm => rm.isOwner);
+    if (!isOwner) {
+      console.error('Only room owners can accept roommate requests');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('roommates')
       .update({ status: 'approved' })
@@ -431,6 +441,16 @@ export const acceptRoommateRequest = async (roomId: string, roommateId: string):
 // Decline/remove a roommate
 export const removeRoommate = async (roomId: string, roommateId: string): Promise<boolean> => {
   try {
+    // First check if the user is the room owner
+    const currentRoom = getCurrentRoom();
+    if (!currentRoom) return false;
+    
+    const isOwner = currentRoom.roommates.some(rm => rm.isOwner);
+    if (!isOwner) {
+      console.error('Only room owners can remove roommates');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('roommates')
       .delete()
