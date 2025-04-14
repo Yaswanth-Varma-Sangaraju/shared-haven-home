@@ -121,6 +121,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
             phoneNumber: rm.phone_number || undefined,
             joinedAt: new Date(rm.joined_at),
             isOwner: rm.is_owner,
+            status: rm.status
           }))
         };
         onRoomUpdate(newRoom);

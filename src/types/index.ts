@@ -8,6 +8,7 @@ export interface Roommate {
   phoneNumber?: string;
   joinedAt: Date;
   isOwner: boolean;
+  status?: 'pending' | 'approved'; // Adding status to the type
 }
 
 export interface Expense {

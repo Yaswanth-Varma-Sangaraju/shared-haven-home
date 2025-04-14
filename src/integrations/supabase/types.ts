@@ -147,6 +147,7 @@ export type Database = {
           name: string
           phone_number: string | null
           room_id: string
+          status: string
           user_id: string | null
         }
         Insert: {
@@ -157,6 +158,7 @@ export type Database = {
           name: string
           phone_number?: string | null
           room_id: string
+          status?: string
           user_id?: string | null
         }
         Update: {
@@ -167,6 +169,7 @@ export type Database = {
           name?: string
           phone_number?: string | null
           room_id?: string
+          status?: string
           user_id?: string | null
         }
         Relationships: [

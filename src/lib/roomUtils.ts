@@ -54,7 +54,8 @@ export const createRoom = async (
         name: ownerName,
         email,
         phone_number: phoneNumber,
-        is_owner: true
+        is_owner: true,
+        status: 'approved' // Owner is always approved
       })
       .select()
       .single();
@@ -80,7 +81,8 @@ export const createRoom = async (
         email: roommateData.email,
         phoneNumber: roommateData.phone_number,
         joinedAt: new Date(roommateData.joined_at),
-        isOwner: roommateData.is_owner
+        isOwner: roommateData.is_owner,
+        status: roommateData.status
       }],
       expenses: [],
       chores: []
@@ -164,7 +166,8 @@ export const findRoomByInviteCode = async (inviteCode: string): Promise<Room | n
         email: r.email || undefined,
         phoneNumber: r.phone_number || undefined,
         joinedAt: new Date(r.joined_at),
-        isOwner: r.is_owner
+        isOwner: r.is_owner,
+        status: r.status
       })) || [],
       expenses: expenses?.map(e => ({
         id: e.id,
