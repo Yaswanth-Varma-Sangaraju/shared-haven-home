@@ -145,6 +145,7 @@ export type Database = {
           is_owner: boolean
           joined_at: string
           name: string
+          phone_number: string | null
           room_id: string
         }
         Insert: {
@@ -153,6 +154,7 @@ export type Database = {
           is_owner?: boolean
           joined_at?: string
           name: string
+          phone_number?: string | null
           room_id: string
         }
         Update: {
@@ -161,6 +163,7 @@ export type Database = {
           is_owner?: boolean
           joined_at?: string
           name?: string
+          phone_number?: string | null
           room_id?: string
         }
         Relationships: [
@@ -180,6 +183,7 @@ export type Database = {
           created_at: string
           id: string
           invite_code: string
+          location: string | null
           name: string
           type: string
         }
@@ -189,6 +193,7 @@ export type Database = {
           created_at?: string
           id?: string
           invite_code: string
+          location?: string | null
           name: string
           type: string
         }
@@ -198,6 +203,7 @@ export type Database = {
           created_at?: string
           id?: string
           invite_code?: string
+          location?: string | null
           name?: string
           type?: string
         }
