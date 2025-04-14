@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Loader2, UserCheck, UserX, UserMinus, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +38,6 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
   const [pendingRoommates, setPendingRoommates] = useState<PendingRoommate[]>([]);
   const [loading, setLoading] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
-  const { toast } = useToast();
 
   // Fetch pending roommates (those who have used invite code but haven't been approved)
   useEffect(() => {
@@ -78,7 +77,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
     };
 
     fetchPendingRoommates();
-  }, [room.id, isOwner, toast]);
+  }, [room.id, isOwner]);
 
   // Accept a pending roommate
   const acceptRoommate = async (roommateId: string) => {
@@ -120,7 +119,6 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
         .single();
         
       if (updatedRoom) {
-        // Convert the database response to our Room model
         const newRoom = {
           ...room,
           roommates: updatedRoom.roommates.map(rm => ({
@@ -130,9 +128,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
             phoneNumber: rm.phone_number || undefined,
             joinedAt: new Date(rm.joined_at),
             isOwner: rm.is_owner,
-            status: rm.status as 'pending' | 'approved',
-            // Preserve isCurrentUser flag from existing roommates
-            isCurrentUser: room.roommates.find(existingRm => existingRm.id === rm.id)?.isCurrentUser || false
+            status: rm.status as 'pending' | 'approved'
           }))
         };
         onRoomUpdate(newRoom);
@@ -246,8 +242,6 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
     }
   };
 
-  const currentRoommates = room.roommates.filter(roommate => roommate.status === 'approved');
-
   return (
     <div className="space-y-6">
       {isOwner && (
@@ -346,7 +340,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {currentRoommates.map((roommate) => (
+            {room.roommates.map((roommate) => (
               <div 
                 key={roommate.id}
                 className="flex justify-between items-center p-3 border rounded-lg"
@@ -367,7 +361,7 @@ const RoommateManagement: React.FC<RoommateManagementProps> = ({ room, isOwner, 
                       Owner
                     </Badge>
                   )}
-                  {isOwner && !roommate.isOwner && !roommate.isCurrentUser && (
+                  {isOwner && !roommate.isOwner && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button

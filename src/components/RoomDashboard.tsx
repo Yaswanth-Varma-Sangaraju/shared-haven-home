@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,9 +21,10 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const { toast } = useToast();
   const [pythonRunning, setPythonRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const currentUserRoommate = room.roommates.find(roommate => roommate.isCurrentUser);
-  const currentUserIsOwner = currentUserRoommate?.isOwner || false;
+  const isRoomFull = room.roommates.length >= room.capacity;
+  
+  // Find the current user's roommate object and check if they are the owner
+  const currentUserIsOwner = room.roommates.some(roommate => roommate.isOwner);
 
   const formatDate = (date: Date) => {
     if (typeof date === 'string') {
@@ -59,6 +61,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
   const runPythonScript = () => {
     setIsLoading(true);
     setPythonRunning(true);
+    // This would normally make an API call to trigger your Python script
     setTimeout(() => {
       setPythonRunning(false);
       setIsLoading(false);
@@ -83,10 +86,7 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
     );
   }
 
-  const approvedRoommateCount = room.roommates.filter(rm => rm.status === 'approved').length;
-  const isRoomFull = approvedRoommateCount >= room.capacity;
-
-  const capacityUtilization = room ? Math.min(100, (approvedRoommateCount / room.capacity) * 100) : 0;
+  const capacityUtilization = room ? Math.min(100, (room.roommates.length / room.capacity) * 100) : 0;
   const capacityColor = capacityUtilization < 70 
     ? 'bg-green-500' 
     : capacityUtilization < 90 
@@ -155,8 +155,8 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
               <div className="flex items-center gap-2 text-sm">
-                <span>Capacity: {approvedRoommateCount}/{room?.capacity}</span>
-                {isRoomFull && (
+                <span>Capacity: {room?.roommates.length}/{room?.capacity}</span>
+                {room?.roommates.length >= room?.capacity && (
                   <Badge variant="outline" className="bg-red-100 text-red-800 border-red-800">
                     Full
                   </Badge>

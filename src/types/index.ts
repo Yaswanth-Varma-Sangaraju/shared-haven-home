@@ -1,3 +1,4 @@
+
 export type RoomType = 'apartment' | 'house' | 'dorm' | 'other';
 
 export interface Roommate {
@@ -7,8 +8,7 @@ export interface Roommate {
   phoneNumber?: string;
   joinedAt: Date;
   isOwner: boolean;
-  status: 'pending' | 'approved';
-  isCurrentUser?: boolean;
+  status?: 'pending' | 'approved'; // Adding status to the type
 }
 
 export interface Expense {

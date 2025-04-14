@@ -105,8 +105,8 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
       
       if (joinedRoom) {
         toast({
-          title: "Request sent!",
-          description: `Your request to join ${joinedRoom.name} has been sent to the room owner for approval.`,
+          title: "Room joined!",
+          description: `You've successfully joined ${joinedRoom.name}`,
         });
         onOpenChange(false);
         navigate('/dashboard');
@@ -137,13 +137,6 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
             Join a Room
           </DialogTitle>
         </DialogHeader>
-
-        <Alert className="bg-amber-50 border-amber-200 mb-4">
-          <AlertCircle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            Your request to join will need to be approved by the room owner before you can access the room.
-          </AlertDescription>
-        </Alert>
 
         {roomCapacityError && (
           <Alert variant="destructive" className="mb-4">
@@ -240,7 +233,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
                 className="w-full sm:w-auto bg-roomie-amber hover:bg-roomie-amber/90 text-white"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Sending request..." : "Request to Join"}
+                {isSubmitting ? "Joining..." : "Join Room"}
               </Button>
             </DialogFooter>
           </form>
