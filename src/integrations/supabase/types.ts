@@ -9,7 +9,200 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chores: {
+        Row: {
+          assigned_to: string | null
+          completed: boolean
+          due_date: string | null
+          frequency: string | null
+          id: string
+          room_id: string
+          title: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed?: boolean
+          due_date?: string | null
+          frequency?: string | null
+          id?: string
+          room_id: string
+          title: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed?: boolean
+          due_date?: string | null
+          frequency?: string | null
+          id?: string
+          room_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chores_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "roommates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chores_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_shares: {
+        Row: {
+          expense_id: string
+          id: string
+          roommate_id: string
+        }
+        Insert: {
+          expense_id: string
+          id?: string
+          roommate_id: string
+        }
+        Update: {
+          expense_id?: string
+          id?: string
+          roommate_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_shares_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_shares_roommate_id_fkey"
+            columns: ["roommate_id"]
+            isOneToOne: false
+            referencedRelation: "roommates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string | null
+          date: string
+          id: string
+          paid_by: string
+          receipt: string | null
+          room_id: string
+          settled: boolean
+          title: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          date?: string
+          id?: string
+          paid_by: string
+          receipt?: string | null
+          room_id: string
+          settled?: boolean
+          title: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          date?: string
+          id?: string
+          paid_by?: string
+          receipt?: string | null
+          room_id?: string
+          settled?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "roommates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roommates: {
+        Row: {
+          email: string | null
+          id: string
+          is_owner: boolean
+          joined_at: string
+          name: string
+          room_id: string
+        }
+        Insert: {
+          email?: string | null
+          id?: string
+          is_owner?: boolean
+          joined_at?: string
+          name: string
+          room_id: string
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          is_owner?: boolean
+          joined_at?: string
+          name?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roommates_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          address: string
+          capacity: number
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          type: string
+        }
+        Insert: {
+          address: string
+          capacity: number
+          created_at?: string
+          id?: string
+          invite_code: string
+          name: string
+          type: string
+        }
+        Update: {
+          address?: string
+          capacity?: number
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
