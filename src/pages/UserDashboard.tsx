@@ -62,9 +62,10 @@ const UserDashboard: React.FC = () => {
         // Transform the data to match the Room type
         const roomsData: Room[] = userRooms.map(ur => ({
           ...ur.rooms,
-          createdAt: ur.rooms.created_at,
+          // Convert string dates to Date objects
+          createdAt: new Date(ur.rooms.created_at),
           inviteCode: ur.rooms.invite_code,
-          type: ur.rooms.type as RoomType, // Explicitly cast to RoomType
+          type: ur.rooms.type as RoomType,
           chores: [], // Add empty chores array as it's not fetched in this query
         }));
 

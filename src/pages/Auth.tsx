@@ -12,13 +12,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Header from "@/components/Header";
 
+// Use a simpler email validation that better handles Gmail addresses
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email(),
   password: z.string().min(6, "Password must be at least 6 characters")
 });
 
 const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email(),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
@@ -154,7 +155,7 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="you@example.com" {...field} />
+                          <Input placeholder="you@example.com" type="email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -192,7 +193,7 @@ const Auth: React.FC = () => {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="you@example.com" {...field} />
+                          <Input placeholder="you@example.com" type="email" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
