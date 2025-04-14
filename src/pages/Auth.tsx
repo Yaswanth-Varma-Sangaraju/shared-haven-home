@@ -1,9 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,8 +28,21 @@ const signupSchema = z.object({
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -50,8 +62,9 @@ const Auth: React.FC = () => {
   });
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
+    setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password
       });
@@ -70,30 +83,50 @@ const Auth: React.FC = () => {
         description: error.message || "An error occurred during login",
         variant: "destructive"
       });
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
+    setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password
       });
 
       if (error) throw error;
 
+      // Check if user needs to confirm their email
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        toast({
+          title: "Email already registered",
+          description: "Please login or reset your password",
+          variant: "destructive"
+        });
+        return;
+      }
+
       toast({
         title: "Signup Successful",
         description: "Your account has been created. Please check your email to verify."
       });
 
-      navigate("/dashboard");
+      // Auto login after signup if email confirmation is not required
+      if (data.session) {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Signup Error",
         description: error.message || "An error occurred during signup",
         variant: "destructive"
       });
+      console.error("Signup error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -140,8 +173,12 @@ const Auth: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full bg-roomie-teal hover:bg-roomie-teal/90">
-                    Login
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-roomie-teal hover:bg-roomie-teal/90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </form>
               </Form>
@@ -187,8 +224,12 @@ const Auth: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full bg-roomie-teal hover:bg-roomie-teal/90">
-                    Sign Up
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-roomie-teal hover:bg-roomie-teal/90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Creating account..." : "Sign Up"}
                   </Button>
                 </form>
               </Form>
@@ -197,6 +238,7 @@ const Auth: React.FC = () => {
               <Button 
                 variant="link" 
                 onClick={() => setIsLogin(!isLogin)}
+                disabled={isLoading}
               >
                 {isLogin 
                   ? "Need an account? Sign Up" 

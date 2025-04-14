@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Room } from "@/types";
+import { Room, RoomType } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ const UserDashboard: React.FC = () => {
         // Fetch user's rooms
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          navigate('/');
+          navigate('/auth');
           return;
         }
 
@@ -64,6 +64,7 @@ const UserDashboard: React.FC = () => {
           ...ur.rooms,
           createdAt: ur.rooms.created_at,
           inviteCode: ur.rooms.invite_code,
+          type: ur.rooms.type as RoomType, // Explicitly cast to RoomType
           chores: [], // Add empty chores array as it's not fetched in this query
         }));
 
