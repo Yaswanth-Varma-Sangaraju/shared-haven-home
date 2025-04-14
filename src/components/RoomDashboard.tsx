@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import ExpenseTracker from "./ExpenseTracker";
 import { useToast } from "@/components/ui/use-toast";
 import { Copy, Home, Users, CheckSquare, Clipboard, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 interface RoomDashboardProps {
   room: Room;
@@ -82,6 +82,14 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
     );
   }
 
+  // Calculate capacity utilization
+  const capacityUtilization = room ? Math.min(100, (room.roommates.length / room.capacity) * 100) : 0;
+  const capacityColor = capacityUtilization < 70 
+    ? 'bg-green-500' 
+    : capacityUtilization < 90 
+      ? 'bg-yellow-500' 
+      : 'bg-red-500';
+
   return (
     <div className="space-y-8">
       {/* Room Header */}
@@ -146,14 +154,24 @@ const RoomDashboard: React.FC<RoomDashboardProps> = ({ room, onRoomUpdate }) => 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
-              {room.roommates.length} / {room.capacity}
-              {isRoomFull && <span className="text-sm font-normal text-amber-600 bg-amber-50 px-2 py-1 rounded">Full</span>}
+              <div className="flex items-center gap-2 text-sm">
+                <span>Capacity: {room?.roommates.length}/{room?.capacity}</span>
+                {room?.roommates.length >= room?.capacity && (
+                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-800">
+                    Full
+                  </Badge>
+                )}
+              </div>
+              <Progress 
+                value={capacityUtilization} 
+                className="h-2" 
+                style={{ width: `${capacityUtilization}%` }}
+              >
+                <div 
+                  className={`h-full ${capacityColor}`} 
+                />
+              </Progress>
             </div>
-            <Progress 
-              value={(room.roommates.length / room.capacity) * 100} 
-              className="mt-2"
-              indicatorClassName={isRoomFull ? "bg-amber-500" : "bg-roomie-teal"}
-            />
           </CardContent>
         </Card>
 

@@ -30,6 +30,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [roomCapacityError, setRoomCapacityError] = useState(false);
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,6 +45,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
   const handleJoinRoom = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     setRoomCapacityError(false);
+    setDuplicateError(null);
     
     try {
       // First check if the room exists and has capacity
@@ -65,7 +67,35 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
         return;
       }
       
-      // If there's capacity, proceed with joining
+      // Check for duplicate name, email, or phone number
+      const duplicateName = room.roommates.find(r => 
+        r.name.toLowerCase() === values.userName.toLowerCase());
+      
+      const duplicateEmail = room.roommates.find(r => 
+        r.email && r.email.toLowerCase() === values.email.toLowerCase());
+      
+      const duplicatePhone = room.roommates.find(r => 
+        r.phoneNumber && r.phoneNumber === values.phoneNumber);
+      
+      if (duplicateName) {
+        setDuplicateError("Someone with this name is already in the room. Please use a different name.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (duplicateEmail) {
+        setDuplicateError("This email is already used by someone in the room. Please use a different email.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (duplicatePhone) {
+        setDuplicateError("This phone number is already used by someone in the room. Please use a different number.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // If there are no duplicates, proceed with joining
       const joinedRoom = await joinRoom(
         values.inviteCode.toUpperCase(), 
         values.userName,
@@ -113,6 +143,15 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({ open, onOpenChange }) => 
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               This room is already at capacity and cannot accept more roommates.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {duplicateError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {duplicateError}
             </AlertDescription>
           </Alert>
         )}

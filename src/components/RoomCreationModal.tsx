@@ -52,6 +52,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({ open, onOpenChang
   const handleCreateRoom = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      // For room creation, we don't need to check for duplicates as this is the first user
       const newRoom = await createRoom(
         values.roomName, 
         values.address,

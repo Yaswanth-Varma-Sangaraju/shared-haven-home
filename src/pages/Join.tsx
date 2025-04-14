@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { findRoomByInviteCode } from "@/lib/roomUtils";
@@ -31,6 +30,7 @@ const Join: React.FC = () => {
   const [roomName, setRoomName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRoomFull, setIsRoomFull] = useState(false);
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,18 +79,60 @@ const Join: React.FC = () => {
     if (!inviteCode) return;
     
     setJoining(true);
+    setDuplicateError(null);
+    
     try {
-      const room = await joinRoom(
+      // Check for duplicate users
+      const room = await findRoomByInviteCode(inviteCode);
+      if (!room) {
+        toast({
+          title: "Error",
+          description: "Room not found. Please check the invite code.",
+          variant: "destructive",
+        });
+        setJoining(false);
+        return;
+      }
+      
+      // Check for duplicate name, email, or phone number
+      const duplicateName = room.roommates.find(r => 
+        r.name.toLowerCase() === values.userName.toLowerCase());
+      
+      const duplicateEmail = room.roommates.find(r => 
+        r.email && r.email.toLowerCase() === values.email.toLowerCase());
+      
+      const duplicatePhone = room.roommates.find(r => 
+        r.phoneNumber && r.phoneNumber === values.phoneNumber);
+      
+      if (duplicateName) {
+        setDuplicateError("Someone with this name is already in the room. Please use a different name.");
+        setJoining(false);
+        return;
+      }
+      
+      if (duplicateEmail) {
+        setDuplicateError("This email is already used by someone in the room. Please use a different email.");
+        setJoining(false);
+        return;
+      }
+      
+      if (duplicatePhone) {
+        setDuplicateError("This phone number is already used by someone in the room. Please use a different number.");
+        setJoining(false);
+        return;
+      }
+      
+      const joinedRoom = await joinRoom(
         inviteCode,
         values.userName,
         values.email,
         values.phoneNumber
       );
       
-      if (room) {
+      if (joinedRoom) {
         toast({
           title: "Room joined!",
-          description: `You've successfully joined ${room.name}`,
+          description: `You've successfully joined ${joinedRoom.name}`,
         });
         navigate("/dashboard");
       } else {
@@ -144,6 +186,15 @@ const Join: React.FC = () => {
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {duplicateError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {duplicateError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
                   <FormField
                     control={form.control}
                     name="userName"
