@@ -14,21 +14,16 @@ import Header from "@/components/Header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
-// Very simple email validation to accept any properly formatted email
-const emailSchema = z.string().email({ message: "Please enter a valid email address" });
-
+// Simplified schemas without constraints
 const loginSchema = z.object({
-  email: z.string().min(1, "Email is required"),
-  password: z.string().min(1, "Password is required")
+  email: z.string(),
+  password: z.string()
 });
 
 const signupSchema = z.object({
-  email: z.string().min(1, "Email is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(1, "Please confirm your password")
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords must match",
-  path: ["confirmPassword"]
+  email: z.string(),
+  password: z.string(),
+  confirmPassword: z.string()
 });
 
 const Auth: React.FC = () => {
@@ -71,13 +66,6 @@ const Auth: React.FC = () => {
     setIsLoading(true);
     setAuthError(null);
     
-    // Validate email format manually before submitting
-    if (!isValidEmail(values.email)) {
-      setAuthError("Please enter a valid email address");
-      setIsLoading(false);
-      return;
-    }
-    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
@@ -94,13 +82,7 @@ const Auth: React.FC = () => {
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
-      
-      // More user-friendly error messages
-      if (error.message.includes("Invalid login")) {
-        setAuthError("Incorrect email or password. Please try again.");
-      } else {
-        setAuthError(error.message || "An error occurred during login");
-      }
+      setAuthError(error.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
@@ -110,13 +92,6 @@ const Auth: React.FC = () => {
     setIsLoading(true);
     setAuthError(null);
     
-    // Validate email format manually before submitting
-    if (!isValidEmail(values.email)) {
-      setAuthError("Please enter a valid email address");
-      setIsLoading(false);
-      return;
-    }
-    
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -125,15 +100,9 @@ const Auth: React.FC = () => {
 
       if (error) throw error;
 
-      // Check if user needs to confirm their email
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setAuthError("Email already registered. Please login or reset your password.");
-        return;
-      }
-
       toast({
         title: "Signup Successful",
-        description: "Your account has been created. Please check your email to verify."
+        description: "Your account has been created!"
       });
 
       // Auto login after signup if email confirmation is not required
@@ -146,13 +115,6 @@ const Auth: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to validate email format
-  const isValidEmail = (email: string) => {
-    // Simple regex that should accept most valid email formats including Gmail
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
   };
 
   return (
